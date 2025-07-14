@@ -9,6 +9,7 @@ import React, { useEffect, useState, useRef } from 'react'
 const App = () => {
   const sketchPanelRef = useRef<SketchPanelHandle>(null);
 
+  // to export from the component
   const handleExport = async () => {
     if (!sketchPanelRef.current) return;
     
