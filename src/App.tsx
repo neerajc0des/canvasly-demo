@@ -1,7 +1,7 @@
 "use client"
 
-import SketchPanel from '@/components/SketchPanel'
-// import type { SketchPanelHandle } from '@/components/SketchPanel'
+import Canvasly from '@/components/Canvasly'
+// import type { CanvaslyPanelHandle } from '@/components/SketchPanel'
 // import React, { useEffect, useState, useRef } from 'react'
 
 // import React from 'react'
@@ -27,7 +27,7 @@ const App = () => {
 
   return (
     <div className='w-full max-h-[90vh] mx-auto'>
-      <SketchPanel />
+      <Canvasly />
     </div>
   )
 }

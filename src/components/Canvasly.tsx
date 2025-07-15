@@ -27,11 +27,11 @@ const defaultPredefinedColors = [
     'rgba(128, 0, 128, 0.5)',   // translucent purple
 ];
 
-export interface SketchPanelHandle {
+export interface CanvaslyHandle {
     exportDrawing?: () => Promise<string>;
 }
 
-interface SketchPanelProps {
+interface CanvaslyProps {
     canvasWidth?: string;
     canvasHeight?: string;
     initialCanvasColor?: string;
@@ -39,7 +39,7 @@ interface SketchPanelProps {
 }
 
 
-const SketchPanel = forwardRef<SketchPanelHandle, SketchPanelProps>((
+const Canvasly = forwardRef<CanvaslyHandle, CanvaslyProps>((
     { canvasWidth = '100%', canvasHeight = 'calc(100vh - 77px)', initialCanvasColor = '#ffffff', customColorPalette },
     ref
 ) => {
@@ -375,4 +375,4 @@ const SketchPanel = forwardRef<SketchPanelHandle, SketchPanelProps>((
     )
 })
 
-export default SketchPanel;
+export default Canvasly;
