@@ -9,9 +9,9 @@ import React, { useEffect, useState, useRef } from 'react'
 const App = () => {
   const sketchPanelRef = useRef<SketchPanelHandle>(null);
 
-  // to export from the component
+  // to export from the component 
   const handleExport = async () => {
-    if (!sketchPanelRef.current) return;
+    if (!sketchPanelRef.current) return; 
     
     try {
       const img = await sketchPanelRef.current.exportDrawing();
@@ -24,7 +24,7 @@ const App = () => {
   // console.log(handleExport());
   
   return (
-    <div className='max-w-4xl max-h-[90vh] mx-auto pt-2'>
+    <div className='w-full max-h-[90vh] mx-auto'>
       <SketchPanel ref={sketchPanelRef}/>
     </div>
   )

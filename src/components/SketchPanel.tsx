@@ -23,7 +23,6 @@ const predefinedColors = [
     'rgba(255, 0, 0, 0.5)', //tranaslucent red
     'rgba(0, 128, 0, 0.5)', // translucent green
     'rgba(0, 0, 0, 0.5)', // translucent black
-
 ];
 
 export interface SketchPanelHandle {
@@ -45,7 +44,9 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
     const [brushRadius, setBrushRadius] = useState<number>(5);
     const [isErasing, setIsErasing] = useState(false);
     const [showColorPicker, setShowColorPicker] = useState(false);
-    const [exportImgUrl, setExportImgUrl] = useState<string>("");
+    const [fillColor, setFillColor] = useState<string>("#fafafa");
+    // const [colorPalettes, setColorPalettes] = useState<string[]>(predefinedColors);
+    // console.log(colorPalettes);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -191,9 +192,9 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
     }
 
     return (
-        <div className='w-full border rounded-md border-zinc-300'>
-            <div className='controls w-full flex items-center justify-between py-1 relative'>
-                <div className="colorPickerContainer relative w-[100%] overflow-x-auto py-2 pl-10 whitespace-nowrap no-scrollbar">
+        <div className='w-full'>
+            <div className='controls w-full flex flex-wrap items-center justify-between bg-accent py-1 relative border-b border-b-zinc-300'>
+                <div className="colorPickerContainer relative w-full sm:w-[60%] overflow-x-auto py-2 pl-10 whitespace-nowrap no-scrollbar">
                     <div onClick={() => setShowColorPicker((prev) => !prev)} ref={customColorIconRef} title="New color" className="w-[20px] h-[20px] text-primary/60  shadow-sm flex items-center justify-center font-semibold hue-wheel-gradient border-zinc-400 border absolute top-[8px] left-[10px] cursor-pointer hover:scale-110">
                         <Plus size={15} strokeWidth={3} />
                     </div>
@@ -218,11 +219,11 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                         />
                     </div>
                 }
-                <div className="flex gap-0 items-center tools justify-end">
+                <div className="flex gap-0 items-center tools w-full sm:w-[30%] justify-between sm:justify-end">
                     <Button
                         title='Undo'
                         onClick={handleUndo}
-                        className=" hover:bg-zinc-200/90 rounded-[5px] p-1 w-[40px] h-[38px]  hover:text-primary/60 cursor-pointer"
+                        className=" hover:bg-zinc-200/90 rounded-[5px] p-1 w-[40px] h-[38px]  hover:text-accent-foreground cursor-pointer"
                         variant={"ghost"}
                         type="button"
                     >
@@ -255,7 +256,7 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                         onClick={handleEraserClick}
                     >
                         <Eraser />
-                        {isErasing && <span className="absolute top-[50px] z-50 bg-zinc-50 rounded-sm shadow-sm py-1 px-2 text-primary left-2 text-xs">Eraser active</span>}
+                        
                     </Button>
 
                     <Button
@@ -288,17 +289,29 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                     <span className="text-gray-700 text-xs font-medium">{brushRadius}px</span>
                 </div>
             </div>
-            <div className="canvasContainer overflow-hidden w-full rounded-md relative">
+            <div className="canvasContainer overflow-hidden w-full h-[calc(100vh-77px)] relative">
                 <ReactSketchCanvas
                     ref={canvasRef}
                     strokeColor={brushColor}
                     strokeWidth={brushRadius}
                     eraserWidth={brushRadius}
-                    canvasColor={"#cacaca"}
+                    canvasColor={fillColor}
                     // width={'300px'}
-                    height={"500px"}
-                    style={{ border: '0px transparent' }}
+                    height={"100%"}
+                    style={{ border: '0px transparent'}}
                 />
+            </div>
+            <div className="footerStrip w-full bg-accent border-t border-t-zinc-300 px-2 md:px-5 py-1 text-sm flex flex-wrap items-center gap-5 gap-y-2 md:gap-10">
+                <div className="text-primary "><span className="font-semibold">Eraser: </span> {isErasing?"On":"Off"}</div>
+                <div className="text-primary flex items-center gap-2"><span className="font-semibold">Brush color: </span>
+                    <div onClick={() => setShowColorPicker((prev) => !prev)} ref={customColorIconRef} title="brush" className={`w-[18px] h-[18px] rounded-sm shadow-sm  border-zinc-400 border cursor-pointer hover:scale-105`}
+                    style={{ backgroundColor: brushColor }}
+                    >
+                    </div>
+                    {brushColor}
+                </div>
+                <div className="text-primary "><span className="font-semibold">Brush Size: </span> {brushRadius}</div>
+                <div className="text-primary "><span className="font-semibold">Canvash dimensions </span> {brushRadius}</div>
             </div>
         </div>
     )
