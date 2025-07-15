@@ -19,7 +19,6 @@ const defaultPredefinedColors = [
     '#FFB7C5',
     '#B39DDB', // Amethyst (Rich, muted purple)
     '#795548', // Brown (Earth tone)
-    'rgba(255, 255, 255, 0.5)', //semilight white
     'rgba(255, 0, 0, 0.5)', //tranaslucent red
     'rgba(0, 128, 0, 0.5)', // translucent green
     'rgba(0, 0, 0, 0.5)', // translucent black
@@ -29,7 +28,7 @@ const defaultPredefinedColors = [
 ];
 
 export interface SketchPanelHandle {
-    exportDrawing: () => Promise<string>;
+    exportDrawing?: () => Promise<string>;
 }
 
 interface SketchPanelProps {
@@ -228,7 +227,7 @@ const SketchPanel = forwardRef<SketchPanelHandle, SketchPanelProps>((
         if (exportImgUrl) {
             const link = document.createElement('a');
             link.href = exportImgUrl;
-            link.download = `my-sketch-${Date.now()}.png`;
+            link.download = `canvasly-${Date.now()}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
