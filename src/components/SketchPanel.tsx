@@ -6,7 +6,7 @@ import { Slider } from "@/components/ui/slider"
 import { CirclePicker, SketchPicker } from 'react-color';
 import type { ColorResult } from 'react-color';
 import { Button } from './ui/button';
-import { Circle, CircleDot, Download, Eraser, Plus, Redo, Trash, Undo } from 'lucide-react';
+import { Circle, CircleDot, Download, Eraser, PaintRoller, Plus, Redo, Trash, Undo } from 'lucide-react';
 
 const predefinedColors = [
     '#FF7F7F', // Vivid Rose (A deeper, more saturated pink-red)
@@ -44,7 +44,7 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
     const [brushRadius, setBrushRadius] = useState<number>(5);
     const [isErasing, setIsErasing] = useState(false);
     const [showColorPicker, setShowColorPicker] = useState(false);
-    const [fillColor, setFillColor] = useState<string>("#fafafa");
+    const [fillColor, setFillColor] = useState<string>("#ffffff");
     // const [colorPalettes, setColorPalettes] = useState<string[]>(predefinedColors);
     // console.log(colorPalettes);
 
@@ -149,6 +149,10 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
             setShowBrushSlider(false);
         }
     };
+
+    const handleFillColor = () => {
+        setFillColor(brushColor);
+    }
 
     // to export image thru parent component 
     useImperativeHandle(ref, () => ({
@@ -258,6 +262,15 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                         <Eraser />
                         
                     </Button>
+                    <Button
+                        onClick={handleFillColor}
+                        className="hover:bg-zinc-200/90 rounded-[5px] p-1 w-[40px] h-[38px] hover:text-primary/60 cursor-pointer"
+                        variant={"ghost"}
+                        type="button"
+                        title='Fill'
+                    >
+                        <PaintRoller />
+                    </Button>
 
                     <Button
                         title='Brush size'
@@ -279,7 +292,7 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                         <Download />
                     </Button>
                 </div>
-                <div ref={sliderBoxRef} className={`sliderContainer ${showBrushSlider ? "block" : "hidden"} z-50 absolute top-[50px] border-zinc-300 border rounded-sm right-[5px] w-[150px] h-[120px] p-5 bg-zinc-100 flex flex-col justify-between items-center`}>
+                <div ref={sliderBoxRef} className={`sliderContainer ${showBrushSlider ? "block" : "hidden"} z-50 absolute top-[50px] border-zinc-300 border rounded-sm right-[5px] w-[150px] h-[120px] p-5 bg-white flex flex-col justify-between items-center`}>
                     <Slider
                         value={[brushRadius]}
                         onValueChange={([val]) => setBrushRadius(val)}
@@ -301,7 +314,7 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                     style={{ border: '0px transparent'}}
                 />
             </div>
-            <div className="footerStrip w-full bg-accent border-t border-t-zinc-300 px-2 md:px-5 py-1 text-sm flex flex-wrap items-center gap-5 gap-y-2 md:gap-10">
+            <div className="footerStrip absolute bottom-0 w-full bg-accent border-t border-t-zinc-300 px-2 md:px-5 py-1 text-sm flex flex-wrap items-center gap-5 gap-y-2 md:gap-10">
                 <div className="text-primary "><span className="font-semibold">Eraser: </span> {isErasing?"On":"Off"}</div>
                 <div className="text-primary flex items-center gap-2"><span className="font-semibold">Brush color: </span>
                     <div onClick={() => setShowColorPicker((prev) => !prev)} ref={customColorIconRef} title="brush" className={`w-[18px] h-[18px] rounded-sm shadow-sm  border-zinc-400 border cursor-pointer hover:scale-105`}
