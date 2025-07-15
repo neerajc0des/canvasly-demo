@@ -8,7 +8,7 @@ import type { ColorResult } from 'react-color';
 import { Button } from './ui/button';
 import { Circle, CircleDot, Download, Eraser, PaintRoller, Plus, Redo, Trash, Undo } from 'lucide-react';
 
-const predefinedColors = [
+const defaultPredefinedColors = [
     '#FF7F7F', // Vivid Rose (A deeper, more saturated pink-red)
     '#FFBF00', // Amber (Bright, warm orange-yellow)
     '#80D880', // Medium Spring Green (Lively but still soft green)
@@ -23,6 +23,9 @@ const predefinedColors = [
     'rgba(255, 0, 0, 0.5)', //tranaslucent red
     'rgba(0, 128, 0, 0.5)', // translucent green
     'rgba(0, 0, 0, 0.5)', // translucent black
+    'rgba(0, 0, 255, 0.5)',     // translucent blue
+    'rgba(255, 165, 0, 0.5)',   // translucent orange
+    'rgba(128, 0, 128, 0.5)',   // translucent purple
 ];
 
 export interface SketchPanelHandle {
@@ -30,23 +33,36 @@ export interface SketchPanelHandle {
 }
 
 interface SketchPanelProps {
-    onImgExport: (imageData: string) => void;
+    canvasWidth?: string;
+    canvasHeight?: string;
+    initialCanvasColor?: string;
+    customColorPalette?: string[];
 }
 
-const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
+
+const SketchPanel = forwardRef<SketchPanelHandle, SketchPanelProps>((
+    { canvasWidth = '100%', canvasHeight = 'calc(100vh - 77px)', initialCanvasColor = '#ffffff', customColorPalette },
+    ref
+) => {
     const canvasRef = useRef<ReactSketchCanvasRef>(null);
+    const canvasContainerRef = useRef<HTMLDivElement>(null);
     const sliderBoxRef = useRef<HTMLDivElement>(null);
     const customColorPickerRef = useRef<HTMLDivElement>(null);
     const customColorIconRef = useRef<HTMLDivElement>(null);
     const brushIconRef = useRef<HTMLButtonElement>(null);
-    const [brushColor, setBrushColor] = useState(predefinedColors[0]);
+    const [brushColor, setBrushColor] = useState('#1e1e1e');
     const [showBrushSlider, setShowBrushSlider] = useState(false);
     const [brushRadius, setBrushRadius] = useState<number>(5);
     const [isErasing, setIsErasing] = useState(false);
     const [showColorPicker, setShowColorPicker] = useState(false);
-    const [fillColor, setFillColor] = useState<string>("#ffffff");
-    // const [colorPalettes, setColorPalettes] = useState<string[]>(predefinedColors);
-    // console.log(colorPalettes);
+    const [tempPickerColor, setTempPickerColor] = useState<ColorResult | null>(null);
+    const [fillColor, setFillColor] = useState<string>(initialCanvasColor);
+    const [canvasActualWidth, setCanvasActualWidth] = useState(0);
+    const [canvasActualHeight, setCanvasActualHeight] = useState(0);
+    const [userColorPalette, setUserColorPalette] = useState<string[]>([]);
+    const colorPalette = customColorPalette && customColorPalette.length > 0
+        ? [...userColorPalette, ...defaultPredefinedColors, ...customColorPalette]
+        : [...userColorPalette, ...defaultPredefinedColors];
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -83,6 +99,22 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
         };
     }, [showBrushSlider, showColorPicker]);
 
+    const updateCanvasDimensions = () => {
+        if (canvasContainerRef.current) {
+            const { clientWidth, clientHeight } = canvasContainerRef.current;
+            setCanvasActualWidth(clientWidth);
+            setCanvasActualHeight(clientHeight);
+        }
+    };
+
+    useEffect(() => {
+        updateCanvasDimensions();
+        window.addEventListener('resize', updateCanvasDimensions);
+
+        return () => {
+            window.removeEventListener('resize', updateCanvasDimensions);
+        };
+    }, [])
 
     const handleBrushIconClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -107,20 +139,31 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
         setBrushColor(newBrushColor);
     };
 
-    const handleChangeCustomColor = (color: ColorResult) => {
-        if (canvasRef.current) {
-            canvasRef.current.eraseMode(false);
-        }
-        setIsErasing(false);
+    const handleSketchPickerChange = (color: ColorResult) => {
+        setTempPickerColor(color);
+    };
 
-        let newBrushColor;
-        if (color.rgb.a !== undefined && color.rgb.a < 1) {
-            newBrushColor = `rgba(${color.rgb.r}, ${color.rgb.g}, ${color.rgb.b}, ${color.rgb.a})`;
-        } else {
-            newBrushColor = color.hex;
-        }
+    const handleConfirmCustomColor = () => {
+        if (tempPickerColor) {
+            if (canvasRef.current) {
+                canvasRef.current.eraseMode(false);
+            }
+            setIsErasing(false);
 
-        setBrushColor(newBrushColor);
+            let newBrushColor: string;
+            if (tempPickerColor.rgb.a !== undefined && tempPickerColor.rgb.a < 1) {
+                newBrushColor = `rgba(${tempPickerColor.rgb.r}, ${tempPickerColor.rgb.g}, ${tempPickerColor.rgb.b}, ${tempPickerColor.rgb.a})`;
+            } else {
+                newBrushColor = tempPickerColor.hex;
+            }
+
+            setUserColorPalette(prev => {
+                return [newBrushColor, ...prev]
+            })
+            setBrushColor(newBrushColor);
+            setShowColorPicker(false);
+            setTempPickerColor(null);
+        }
     };
 
     const handleUndo = () => {
@@ -172,7 +215,7 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
         try {
             const img = await canvasRef.current.exportImage('png');
             return img;
-            
+
         } catch (error) {
             console.log(error);
             return null;
@@ -186,10 +229,10 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
             const link = document.createElement('a');
             link.href = exportImgUrl;
             link.download = `my-sketch-${Date.now()}.png`;
-            document.body.appendChild(link); 
-            link.click(); 
-            document.body.removeChild(link); 
-            URL.revokeObjectURL(exportImgUrl); 
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(exportImgUrl);
         } else {
             console.warn("No image URL to download.");
         }
@@ -204,23 +247,26 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                     </div>
 
                     <CirclePicker
-                        colors={predefinedColors}
+                        colors={colorPalette}
                         color={brushColor}
                         onChangeComplete={handleChangeColor}
-                        width='430px'
+                        width='600px'
                         circleSize={20}
                         circleSpacing={10}
                     />
                 </div>
                 {/* <div className="separator w-px h-[15px] bg-zinc-400/80 mx-2 rounded-sm"></div> */}
                 {showColorPicker &&
-                    <div className="sketchPickerWrapper absolute top-[10px] left-[10px] z-50" ref={customColorPickerRef}>
+                    <div className="sketchPickerWrapper absolute top-[55px] left-[10px] z-50" ref={customColorPickerRef}>
                         <SketchPicker
-                            color={brushColor}
-                            onChangeComplete={handleChangeCustomColor}
+                            color={tempPickerColor ? tempPickerColor.rgb : brushColor}
+                            onChange={handleSketchPickerChange}
                             width='250px'
-                            className='absolute top-[45px] left-[10px]'
                         />
+                        <div className="confirmColorPickContainer w-full flex items-center justify-end gap-5 px-2 mt-1 py-2 bg-white border border-zinc-300 shadow-md rounded-sm">
+                            <Button type='button' onClick={() => { setShowColorPicker(false); setTempPickerColor(null); }} variant={'secondary'} className='!text-xs cursor-pointer border-zinc-300 border h-[30px]'>Cancel</Button>
+                            <Button type='button' variant={'default'} className='!text-xs cursor-pointer h-[30px]' onClick={handleConfirmCustomColor}>Ok</Button>
+                        </div>
                     </div>
                 }
                 <div className="flex gap-0 items-center tools w-full sm:w-[30%] justify-between sm:justify-end">
@@ -260,7 +306,7 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                         onClick={handleEraserClick}
                     >
                         <Eraser />
-                        
+
                     </Button>
                     <Button
                         onClick={handleFillColor}
@@ -280,7 +326,7 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                         ref={brushIconRef}
                         onClick={handleBrushIconClick}
                     >
-                        <CircleDot />
+                        <CircleDot/>
                     </Button>
                     <Button
                         title='download'
@@ -298,33 +344,33 @@ const SketchPanel = forwardRef<SketchPanelHandle>((_props, ref) => {
                         onValueChange={([val]) => setBrushRadius(val)}
                         className='cursor-pointer' defaultValue={[5]} min={2} max={70} step={1}
                     />
-                    <Circle size={brushRadius} />
+                    <Circle size={brushRadius} color={brushColor}/>
                     <span className="text-gray-700 text-xs font-medium">{brushRadius}px</span>
                 </div>
             </div>
-            <div className="canvasContainer overflow-hidden w-full h-[calc(100vh-77px)] relative">
+            <div ref={canvasContainerRef} className="canvasContainer overflow-hidden w-full h-[calc(100vh-77px)] relative">
                 <ReactSketchCanvas
                     ref={canvasRef}
                     strokeColor={brushColor}
                     strokeWidth={brushRadius}
                     eraserWidth={brushRadius}
                     canvasColor={fillColor}
-                    // width={'300px'}
-                    height={"100%"}
-                    style={{ border: '0px transparent'}}
+                    width={canvasWidth}
+                    height={canvasHeight}
+                    style={{ border: '0px transparent' }}
                 />
             </div>
-            <div className="footerStrip absolute bottom-0 w-full bg-accent border-t border-t-zinc-300 px-2 md:px-5 py-1 text-sm flex flex-wrap items-center gap-5 gap-y-2 md:gap-10">
-                <div className="text-primary "><span className="font-semibold">Eraser: </span> {isErasing?"On":"Off"}</div>
+            <div className="footerStrip select-none absolute bottom-0 w-full bg-accent border-t border-t-zinc-300 px-1 md:px-5 py-1 text-xs flex flex-wrap items-center justify-between sm:justify-start sm:gap-10">
+                <div className="text-primary "><span className="font-semibold">Eraser: </span> {isErasing ? "On" : "Off"}</div>
                 <div className="text-primary flex items-center gap-2"><span className="font-semibold">Brush color: </span>
                     <div onClick={() => setShowColorPicker((prev) => !prev)} ref={customColorIconRef} title="brush" className={`w-[18px] h-[18px] rounded-sm shadow-sm  border-zinc-400 border cursor-pointer hover:scale-105`}
-                    style={{ backgroundColor: brushColor }}
+                        style={{ backgroundColor: brushColor }}
                     >
                     </div>
                     {brushColor}
                 </div>
                 <div className="text-primary "><span className="font-semibold">Brush Size: </span> {brushRadius}</div>
-                <div className="text-primary "><span className="font-semibold">Canvash dimensions </span> {brushRadius}</div>
+                <div className="text-primary hidden sm:block"><span className="font-semibold">Canvas dimensions: </span> {canvasActualWidth} x {canvasActualHeight}</div>
             </div>
         </div>
     )
