@@ -1,6 +1,8 @@
 "use client"
 
 import Canvasly from '@/components/Canvasly'
+import { Button } from '@/components/ui/button';
+import { Github } from 'lucide-react';
 // import type { CanvaslyPanelHandle } from '@/components/SketchPanel'
 // import React, { useEffect, useState, useRef } from 'react'
 
@@ -28,6 +30,11 @@ const App = () => {
   return (
     <div className='w-full max-h-[90vh] mx-auto'>
       <Canvasly />
+      <Button asChild type='button' className='absolute py-4 bottom-2 right-2'>
+        <a href="https://github.com/neerajc0des/canvasly-demo" target="_blank" rel="noopener noreferrer">
+         <Github/>
+        </a>
+      </Button>
     </div>
   )
 }
